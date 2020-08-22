@@ -1,10 +1,9 @@
-/* Return the entries of a table in Notion */
 
-const getTableFromId = require("../notion/getTableFromId")
+const call = require("../notion/call")
 const normalizeId = require("../notion/normalizeId")
-const textArrayToHtml = require("../notion/textArrayToHtml.js")
-const getAssetUrl = require("../notion/getAssetUrl")
+const getMarkdownFromId = require("../notion/getMarkdownFromId")
 
+const fetch = require("node-fetch")
 
 
 module.exports = async (req, res) => {
@@ -20,12 +19,12 @@ module.exports = async (req, res) => {
 
   let output
   try {
-    output = await getTableFromId(id)
+    output = await getMarkdownFromId(id)
   } catch(e) {
     console.error(e)
     return res.send(e.message)
   }
 
-  return res.json(output)
+  res.setHeader('content-type', 'text/plain')
+  return res.send(output)
 }
-
