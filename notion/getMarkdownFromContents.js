@@ -59,8 +59,34 @@ ${text.map(clip => clip[0]).join("&nbsp;&nbsp;>>")}
 ~~~\n\n`)
 
     } else if(["toggle"].includes(type)) {
-      markdown.push(`<details>\n`)
-      markdown.push(`  <summary>${block.properties.title[0]}</summary>\n\n`)
+
+      if(block.properties.title[0] && block.properties.title[0] && block.properties.title[0][0].includes('$blockdef')) {
+        console.log('block def string::: ', block.properties.title[0][0])
+        const blockStr = block.properties.title[0][0].split(' ') // {.class #identifier attr=value attr2="spaced value"}
+        let clss = blockStr.filter(str => str.substring(0,1) === '.')
+        const ids = blockStr.filter(str => str.substring(0,1) === '#')
+        const attrRegex = /\b\w*[=](\w|"(.*?)")*/g
+        const attrs = []
+
+        
+
+        do {
+          var match = attrRegex.exec(blockStr); // note, this adds annoying commas to the attr string
+          if (match != null)
+            attrs.push(match[0]);
+        } while (match != null);
+
+        clss = clss.reduce((acc,val) => acc + val.substring(1) + ' ','')
+        let attrstr = attrs.reduce((acc,val) => acc + val.replace(/,/g,' ') + ' ','')
+
+        console.log(blockStr, clss, ids, attrs)
+        markdown.push(`<div ${ids&&ids.length>0?`id="${ids[0]}"`:""} clss="${clss}" ${attrstr}>\n`)
+      } else {
+        markdown.push(`<details>\n`)
+        if(block.properties.title[0]) {
+          markdown.push(`  <summary>${block.properties.title[0]}</summary>\n\n`)
+        }
+      }
 
       // recursively build the toggle
       if (block.content) {
@@ -73,7 +99,11 @@ ${text.map(clip => clip[0]).join("&nbsp;&nbsp;>>")}
         })
       }
 
-      markdown.push(`</details>\n\n`)
+      if(block.properties.title[0] && block.properties.title[0] && block.properties.title[0][0].includes('$blockdef')) {
+        markdown.push(`</div>\n\n`)
+      } else {
+        markdown.push(`</details>\n\n`)
+      }
       _recurse = false // don't recurse after this since everything needs to fit within this block
     } else if(["callout"].includes(type)) {
       /* Callout formatted with emoji from emojicdn.elk.sh or just image */
