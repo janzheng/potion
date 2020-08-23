@@ -12,7 +12,7 @@ async function getPageChunkFromId(id) {
     verticalColumns: false
   })
 
-  console.log('----> chunk?', chunk)
+  // console.log('----> chunk?', chunk)
   return chunk
 }
 

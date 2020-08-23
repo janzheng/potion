@@ -10,7 +10,7 @@ const getPageChunkFromId = require("./getPageChunkFromId")
 
 const call = require("./call")
 
-async function getMarkdownFromContents(contents, recurse=true, depth=0, pageChunk=undefined) {
+async function getMarkdownFromContents(contents, recurse=true, depth=0, pageChunk=undefined, addIndentation=true) {
   const markdown = []
   // forEach isn't async // https://codeburst.io/javascript-async-await-with-foreach-b6ba62bbf404
   await asyncForEach(contents, async block => {
@@ -59,16 +59,16 @@ ${text.map(clip => clip[0]).join("&nbsp;&nbsp;>>")}
 ~~~\n\n`)
 
     } else if(["toggle"].includes(type)) {
+      let tag
 
+      // old way of defining a block; realized it's easier to just add the entire tag instead
+      // $blockdef .class-1 .class-2 .class_3--1 #identifier attr=something attr2="one two three four five"
       if(block.properties.title[0] && block.properties.title[0] && block.properties.title[0][0].includes('$blockdef')) {
-        console.log('block def string::: ', block.properties.title[0][0])
         const blockStr = block.properties.title[0][0].split(' ') // {.class #identifier attr=value attr2="spaced value"}
         let clss = blockStr.filter(str => str.substring(0,1) === '.')
         const ids = blockStr.filter(str => str.substring(0,1) === '#')
         const attrRegex = /\b\w*[=](\w|"(.*?)")*/g
         const attrs = []
-
-        
 
         do {
           var match = attrRegex.exec(blockStr); // note, this adds annoying commas to the attr string
@@ -79,8 +79,15 @@ ${text.map(clip => clip[0]).join("&nbsp;&nbsp;>>")}
         clss = clss.reduce((acc,val) => acc + val.substring(1) + ' ','')
         let attrstr = attrs.reduce((acc,val) => acc + val.replace(/,/g,' ') + ' ','')
 
-        console.log(blockStr, clss, ids, attrs)
-        markdown.push(`<div ${ids&&ids.length>0?`id="${ids[0]}"`:""} clss="${clss}" ${attrstr}>\n`)
+        markdown.push(`<div ${ids&&ids.length>0?`id="${ids[0].substring(1)}"`:""} clss="${clss}" ${attrstr}>\n`)
+        addIndentation = false
+      } else if (block.properties.title[0] && block.properties.title[0] && block.properties.title[0][0][0] === '<') {
+        // treats any toggle that starts with "<" and a tag block toggle
+        const summary = block.properties.title[0][0]
+        tag = summary.split(' ')[0].substring(1)
+        addIndentation = false
+        console.log('tag type!!!:', tag, summary, summary.split(' ')[0])
+        markdown.push(summary)
       } else {
         markdown.push(`<details>\n`)
         if(block.properties.title[0]) {
@@ -91,9 +98,9 @@ ${text.map(clip => clip[0]).join("&nbsp;&nbsp;>>")}
       // recursively build the toggle
       if (block.content) {
         await asyncForEach(block.content, async contentId => {
-          const _content = await getContentFromId(contentId, depth, pageChunk)
+          const _content = await getContentFromId(contentId, depth, pageChunk, false)
           _content.markdown.forEach(md => {
-            const spaces = '  '
+            const spaces = addIndentation ? '  ' : ''
             markdown.push(`${spaces.repeat(depth+1)}${md}`) 
           })
         })
@@ -101,6 +108,8 @@ ${text.map(clip => clip[0]).join("&nbsp;&nbsp;>>")}
 
       if(block.properties.title[0] && block.properties.title[0] && block.properties.title[0][0].includes('$blockdef')) {
         markdown.push(`</div>\n\n`)
+      } else if (block.properties.title[0] && block.properties.title[0] && block.properties.title[0][0][0] === '<') {
+        markdown.push(`</${tag}>\n\n`)
       } else {
         markdown.push(`</details>\n\n`)
       }
@@ -152,7 +161,7 @@ ${text.map(clip => clip[0]).join("&nbsp;&nbsp;>>")}
       // need an extension to add nested content (which doesn't exist...)
       await asyncForEach(block.content, async contentId => {
         const _content = await getContentFromId(contentId, depth, pageChunk)
-        const spaces = '  '
+        const spaces = addIndentation ? '  ' : ''
         if(_content.markdown) {
           _content.markdown.forEach(md => {
             // console.log('md:', depth+1, md)

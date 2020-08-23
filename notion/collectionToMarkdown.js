@@ -51,10 +51,18 @@ function getCollectionFromOrderedFields (collection) {
   // populate the header
   let header = '', divider = ''
   const fieldArr = collection[0].orderedFields
-  Object.keys(fieldArr).map(i => {
-    header += `${Object.keys(fieldArr[i])[0]} |`
-    divider += `:-|` // left align by default
-  })
+
+  if(fieldArr && fieldArr.length > 0) { // use the view if it exists
+    Object.keys(fieldArr).map(i => {
+      header += `${Object.keys(fieldArr[i])[0]} |`
+      divider += `:-|` // left align by default
+    })
+  } else { // otherwise try to use the table itself, which might not have the right col names
+    Object.keys(collection[0].fields).reverse().map(fieldKey => {
+      header += `${fieldKey} |`
+      divider += `:-|` // left align by default
+    })
+  }
 
   markdown.push(header+'\n')
   markdown.push(divider+'\n')

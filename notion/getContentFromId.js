@@ -12,7 +12,7 @@ const fetch = require("node-fetch")
 
 
 
-async function getContentFromId(id, depth=0, pageChunk=undefined) {
+async function getContentFromId(id, depth=0, pageChunk=undefined, addIndentation=true) {
   
   if(!pageChunk) {
     pageChunk = await getPageChunkFromId(id)
@@ -60,7 +60,7 @@ async function getContentFromId(id, depth=0, pageChunk=undefined) {
     type,
     value: record.value.properties && record.value.properties.title ? record.value.properties.title[0][0] : undefined,
     properties: record.value.properties,
-    markdown: await getMarkdownFromContents([record.value], true, depth, pageChunk)
+    markdown: await getMarkdownFromContents([record.value], true, depth, pageChunk, addIndentation)
   }
 
   // console.log('BLOCK???', record.value, record.value.properties ? record.value.properties.title[0][0] : '')

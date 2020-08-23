@@ -49,7 +49,7 @@ async function getTableFromId(id) {
   const view = tableData.recordMap.collection_view[collectionViewId]
   const tableProps = view.value.format ? view.value.format.table_properties : undefined
   
-  // console.log('tableData tableProps:', tableProps)
+  // console.log('tableData VIEW:', tableData.recordMap.collection_view)
 
   subPages.forEach(id => {
     const page = tableData.recordMap.block[id]
@@ -98,6 +98,7 @@ async function getTableFromId(id) {
         if(field.visible) {
           const obj = {}
           obj[schema[field.property].name] = fields[schema[field.property].name]
+          // if(fields[schema[field.property].name]) // we do want empty object to appear — makes it easier to traverse since all arrays will be equal length
           orderedFields.push(obj)
         }
       })
