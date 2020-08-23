@@ -120,7 +120,7 @@ ${text.map(clip => clip[0]).join("&nbsp;&nbsp;>>")}
       markdown.push(`---`)
     } else if(["image"].includes(type)) {
       // markdown.push(`<img src="https://www.notion.so/image/${encodeURIComponent(block.format.display_source)}">`)
-      markdown.push(`[Generated image (alt doesn't exist for this, sorry :( ))](https://www.notion.so/image/${encodeURIComponent(block.format.display_source)})`)
+      markdown.push(`![Generated image](https://www.notion.so/image/${encodeURIComponent(block.format.display_source)})`)
     } else if(["equation"].includes(type)) {
       if(!block.properties) {
         // Equation block is empty
