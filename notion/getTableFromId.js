@@ -1,44 +1,69 @@
 
 const call = require("./call")
 const textArrayToHtml = require("./textArrayToHtml")
+const asyncForEach = require("../helpers/asyncForEach.js")
 
 
-async function getTableFromId(id) {
+async function getTableFromId({id, recordMap=undefined, collectionMap={}, getContent=false}) {
 
-  const pageData = await call("getRecordValues", {
-    requests: [
-      {
-        id: id,
-        table: "block"
-      }
-    ]
-  })
+  let {pageData, tableData, collectionId, collectionViewId} = collectionMap[id] ? collectionMap[id] : {}
 
-  if(!pageData.results[0].value) {
-    throw new Error("invalid Notion doc ID, or public access is not enabled on this doc")
-    // return res.json({
-    //   error: "invalid Notion doc ID, or public access is not enabled on this doc"
-    // })
+
+  if(!id) {
+    throw new Error ("[getTableFromId] Please include an ID!")
   }
 
-  if(!pageData.results[0].value.type.startsWith("collection_view")) {
-    throw new Error("this Notion doc is not a collection")
-    // return res.json({
-    //   error: "this Notion doc is not a collection"
-    // })
-  }
+  // console.log('coooooolmap', collectionMap)
 
-  const collectionId = pageData.results[0].value.collection_id
-  const collectionViewId = pageData.results[0].value.view_ids[0]
-  
+  if(!collectionMap[id]) {
+    pageData = await call("getRecordValues", {
+      requests: [
+        {
+          id: id,
+          table: "block"
+        }
+      ]
+    })
 
-  const tableData = await call("queryCollection", {
-    collectionId,
-    collectionViewId,
-    loader: {
-      type: "table"
+    if(!pageData.results[0].value) {
+      throw new Error("invalid Notion doc ID, or public access is not enabled on this doc")
+      // return res.json({
+      //   error: "invalid Notion doc ID, or public access is not enabled on this doc"
+      // })
     }
-  })
+
+    if(!pageData.results[0].value.type.startsWith("collection_view")) {
+      throw new Error("this Notion doc is not a collection")
+      // return res.json({
+      //   error: "this Notion doc is not a collection"
+      // })
+    }
+
+    collectionId = pageData.results[0].value.collection_id
+    collectionViewId = pageData.results[0].value.view_ids[0]
+
+    tableData = await call("queryCollection", {
+      collectionId,
+      collectionViewId,
+      loader: {
+        type: "table"
+      }
+    })
+
+    // console.log('[     ]-> getTableFromId API call: ', id, ' ||||||| ',  collectionId, collectionViewId, '???' ,pageData, tableData)
+    console.log('[     ]-> getTableFromId API call: ', id)
+    collectionMap[id] = {pageData, tableData, collectionId, collectionViewId}
+
+    // add the collections' records to the overall record map as cache
+    if(recordMap && recordMap.block && tableData && tableData.recordMap)
+      recordMap.block = { ...recordMap.block, ...tableData.recordMap.block}
+  }
+
+
+
+  // console.log('getTableFromId [pageData, tableData]', id, collectionMap, pageData, tableData)
+
+
 
   const subPages = tableData.result.blockIds
 
@@ -51,7 +76,11 @@ async function getTableFromId(id) {
   
   // console.log('tableData VIEW:', tableData.recordMap.collection_view)
 
-  subPages.forEach(id => {
+  // console.log('getTableFromId:', subPages)
+
+
+  // subPages.forEach(id => {
+  await asyncForEach(subPages, async id => {
     const page = tableData.recordMap.block[id]
 
     const fields = {}
@@ -104,6 +133,11 @@ async function getTableFromId(id) {
       })
     }
 
+    let content
+    if(getContent) {
+      content = await getContentFromId({id, recordMap, collectionMap})
+      // console.log('Getting linked content', id, page.value.type, recordMap.block[id].value.properties ? recordMap.block[id].value.properties.title[0] : ' [no title]', )
+    }
 
     output.push({
       fields, 
@@ -112,7 +146,9 @@ async function getTableFromId(id) {
       id: page.value.id,
       emoji: page.value.format && page.value.format.page_icon,
       created: page.value.created_time,
-      last_edited: page.value.last_edited_time
+      last_edited: page.value.last_edited_time,
+      // recordMap: tableData.recordMap,
+      content,
     })
   })
 
@@ -122,5 +158,9 @@ async function getTableFromId(id) {
 
 
 module.exports = getTableFromId
+
+
+// prevents circular dependency trap (markdown <> contents)
+const getContentFromId = require("./getContentFromId.js")
 
 

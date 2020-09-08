@@ -59,6 +59,6 @@ module.exports = async (id) => {
   // console.log('getMdFromId:::: chunk:', chunk)
 
   
-  const markdown = await getMarkdownFromContents(contents, true, 0, chunk)
+  const markdown = await getMarkdownFromContents({contents, recurse:true, depth:0, recordMap: chunk.recordMap})
   return markdown.join("")
 }

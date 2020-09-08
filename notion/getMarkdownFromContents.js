@@ -6,11 +6,11 @@ const asyncForEach = require("../helpers/asyncForEach.js")
 const textArrayToHtml = require("./textArrayToHtml.js")
 const collectionToMarkdown = require("./collectionToMarkdown.js")
 const getTableFromId = require("./getTableFromId")
-const getPageChunkFromId = require("./getPageChunkFromId")
+// const getPageChunkFromId = require("./getPageChunkFromId")
 
 const call = require("./call")
 
-async function getMarkdownFromContents(contents, recurse=true, depth=0, pageChunk=undefined, addIndentation=true) {
+async function getMarkdownFromContents({contents, recurse=true, depth=0, recordMap=undefined, addIndentation=true, collectionMap={}}) {
   const markdown = []
   // forEach isn't async // https://codeburst.io/javascript-async-await-with-foreach-b6ba62bbf404
   await asyncForEach(contents, async block => {
@@ -98,7 +98,7 @@ ${text.map(clip => clip[0]).join("&nbsp;&nbsp;>>")}
       // recursively build the toggle
       if (block.content) {
         await asyncForEach(block.content, async contentId => {
-          const _content = await getContentFromId(contentId, depth, pageChunk, false)
+          const _content = await getContentFromId({id: contentId, depth, recordMap, collectionMap, addIndentation: false})
           _content.markdown.forEach(md => {
             const spaces = addIndentation ? '  ' : ''
             markdown.push(`${spaces.repeat(depth+1)}${md}`) 
@@ -145,10 +145,11 @@ ${text.map(clip => clip[0]).join("&nbsp;&nbsp;>>")}
     } else if(["page"].includes(type)) {
       // console.log('TODO  ::::: EMBEDDED PAGE :::::', block.properties, block.properties.title)
     } else if(["collection_view"].includes(type)) {
-      const table = await getTableFromId(block.id)
+      // console.log('getting embedded table')
+      const table = await getTableFromId({id: block.id, collectionMap, recordMap})
       const tableMd = collectionToMarkdown(table)
       markdown.push(tableMd)
-      // markdown.push('\n') // add an empty row
+      markdown.push('\n') // add an empty row
     } else {
       /* Catch blocks without handler method */
       // console.error('Unhandled block type:', block.properties, block)
@@ -160,7 +161,7 @@ ${text.map(clip => clip[0]).join("&nbsp;&nbsp;>>")}
       // get markdown recursively from children; BUT most markdown will NOT support this out of the box
       // need an extension to add nested content (which doesn't exist...)
       await asyncForEach(block.content, async contentId => {
-        const _content = await getContentFromId(contentId, depth, pageChunk)
+        const _content = await getContentFromId({id: contentId, depth, recordMap, collectionMap})
         const spaces = addIndentation ? '  ' : ''
         if(_content.markdown) {
           _content.markdown.forEach(md => {
@@ -185,6 +186,6 @@ ${text.map(clip => clip[0]).join("&nbsp;&nbsp;>>")}
 
 module.exports = getMarkdownFromContents
 
-// prevents circular dependency trap (markdown <> gontents)
+// prevents circular dependency trap (markdown <> contents)
 const getContentFromId = require("./getContentFromId.js")
 
