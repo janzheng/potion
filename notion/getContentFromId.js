@@ -87,7 +87,7 @@ async function getContentFromId({id, depth=0, collectionMap={}, recordMap=undefi
   const contentIds = record.value.content
 
   if(type === 'collection_view') {
-    let tableData = await getTableFromId({id: record.value.id, getContent:true, recordMap, collectionMap, collectionData, collectionName})
+    let tableData = await getTableFromId({id: record.value.id, getContent:true, recordMap, collectionMap})
     content.table = tableData.table
     content.value = tableData.value
     content.data = tableData.data

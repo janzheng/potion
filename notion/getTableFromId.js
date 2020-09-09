@@ -51,8 +51,8 @@ async function getTableFromId({id, recordMap=undefined, collectionMap={}, getCon
     })
 
     // console.log('[     ]-> getTableFromId API call: ', id, ' ||||||| ',  collectionId, collectionViewId, '???' ,pageData, tableData)
-    // console.log('[     ]-> getTableFromId API call: ', id, ' collId:', collectionId, ' >>> ', tableData.recordMap.collection)
-    console.log('[     ]-> getTableFromId API call: ', id, collectionViewId)
+    // console.log('[     ]-> getTableFromId API call: ', id, ' collId:', collectionId, ' >>> ', tableData.recordMap.collection[collectionId].value)
+    console.log('[     ]-> getTableFromId API call: ', id, collectionId)
 
 
     collectionMap[id] = {pageData, tableData, collectionId, collectionViewId}
@@ -77,9 +77,8 @@ async function getTableFromId({id, recordMap=undefined, collectionMap={}, getCon
   const tableProps = view.value.format ? view.value.format.table_properties : undefined
   
 
-  // send the name of the table back to the caller
-  collectionData = tableData.recordMap.collection[collectionId].value
-  collectionName = tableData.recordMap.collection[collectionId].value.name ? tableData.recordMap.collection[collectionId].value.name[0][0] : undefined
+  const collectionData = tableData.recordMap.collection[collectionId].value
+  const collectionName = tableData.recordMap.collection[collectionId].value.name ? tableData.recordMap.collection[collectionId].value.name[0][0] : undefined
 
   // console.log('getTableFromId:', subPages)
 
@@ -129,7 +128,7 @@ async function getTableFromId({id, recordMap=undefined, collectionMap={}, getCon
     const orderedFields = []
     if(tableProps) {
       tableProps.forEach(field => {
-        if(field.visible) {
+        if(field.visible && schema[field.property]) {
           const obj = {}
           obj[schema[field.property].name] = fields[schema[field.property].name]
           // if(fields[schema[field.property].name]) // we do want empty object to appear — makes it easier to traverse since all arrays will be equal length
@@ -147,7 +146,7 @@ async function getTableFromId({id, recordMap=undefined, collectionMap={}, getCon
     output.push({
       fields, 
       orderedFields,
-      title: page.value.properties.title,
+      title: page.value.properties && page.value.properties.title,
       id: page.value.id,
       emoji: page.value.format && page.value.format.page_icon,
       created: page.value.created_time,

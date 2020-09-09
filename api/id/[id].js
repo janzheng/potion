@@ -26,7 +26,9 @@ module.exports = async (req, res) => {
 
   let output
   try {
+    console.time('fetch id')
     output = await getContentFromId({id})
+    console.timeEnd('fetch id')
   } catch(e) {
     console.error(e)
     return res.send(e.message)
