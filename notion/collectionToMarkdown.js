@@ -43,14 +43,14 @@ function getCollectionFromFields (collection) {
 
 
 function getCollectionFromOrderedFields (collection) {
-  if(collection.length == 0)
+  if(!collection || collection.length == 0 || !collection[0])
     return undefined
 
   const markdown = []
 
   // populate the header
   let header = '', divider = ''
-  const fieldArr = collection[0].orderedFields
+  const fieldArr = collection[0] ? collection[0].orderedFields : undefined
 
   if(fieldArr && fieldArr.length > 0) { // use the view if it exists
     Object.keys(fieldArr).map(i => {
@@ -82,3 +82,6 @@ function getCollectionFromOrderedFields (collection) {
 
 
 module.exports = getCollectionFromOrderedFields
+
+
+

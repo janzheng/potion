@@ -20,7 +20,8 @@ module.exports = async (req, res) => {
 
   let output
   try {
-    output = await getTableFromId({id})
+    let tableData = await getTableFromId({id})
+    output = tableData
   } catch(e) {
     console.error(e)
     return res.send(e.message)

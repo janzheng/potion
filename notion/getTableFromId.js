@@ -4,7 +4,7 @@ const textArrayToHtml = require("./textArrayToHtml")
 const asyncForEach = require("../helpers/asyncForEach.js")
 
 
-async function getTableFromId({id, recordMap=undefined, collectionMap={}, getContent=false}) {
+async function getTableFromId({id, recordMap=undefined, collectionMap={}, getContent=false, }) {
 
   let {pageData, tableData, collectionId, collectionViewId} = collectionMap[id] ? collectionMap[id] : {}
 
@@ -46,12 +46,15 @@ async function getTableFromId({id, recordMap=undefined, collectionMap={}, getCon
       collectionId,
       collectionViewId,
       loader: {
-        type: "table"
+        type: "table",
       }
     })
 
     // console.log('[     ]-> getTableFromId API call: ', id, ' ||||||| ',  collectionId, collectionViewId, '???' ,pageData, tableData)
-    console.log('[     ]-> getTableFromId API call: ', id)
+    // console.log('[     ]-> getTableFromId API call: ', id, ' collId:', collectionId, ' >>> ', tableData.recordMap.collection)
+    console.log('[     ]-> getTableFromId API call: ', id, collectionViewId)
+
+
     collectionMap[id] = {pageData, tableData, collectionId, collectionViewId}
 
     // add the collections' records to the overall record map as cache
@@ -66,7 +69,6 @@ async function getTableFromId({id, recordMap=undefined, collectionMap={}, getCon
 
 
   const subPages = tableData.result.blockIds
-
   const schema = tableData.recordMap.collection[collectionId].value.schema
 
   const output = []
@@ -74,7 +76,10 @@ async function getTableFromId({id, recordMap=undefined, collectionMap={}, getCon
   const view = tableData.recordMap.collection_view[collectionViewId]
   const tableProps = view.value.format ? view.value.format.table_properties : undefined
   
-  // console.log('tableData VIEW:', tableData.recordMap.collection_view)
+
+  // send the name of the table back to the caller
+  collectionData = tableData.recordMap.collection[collectionId].value
+  collectionName = tableData.recordMap.collection[collectionId].value.name ? tableData.recordMap.collection[collectionId].value.name[0][0] : undefined
 
   // console.log('getTableFromId:', subPages)
 
@@ -152,7 +157,11 @@ async function getTableFromId({id, recordMap=undefined, collectionMap={}, getCon
     })
   })
 
-  return output
+  return { // these names are to align more closely with other notion objects
+    data: collectionData,
+    value: collectionName,
+    table: output
+  }
 
 }
 

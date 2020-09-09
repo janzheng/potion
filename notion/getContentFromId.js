@@ -87,7 +87,10 @@ async function getContentFromId({id, depth=0, collectionMap={}, recordMap=undefi
   const contentIds = record.value.content
 
   if(type === 'collection_view') {
-    content.table = await getTableFromId({id: record.value.id, getContent:true, recordMap, collectionMap})
+    let tableData = await getTableFromId({id: record.value.id, getContent:true, recordMap, collectionMap, collectionData, collectionName})
+    content.table = tableData.table
+    content.value = tableData.value
+    content.data = tableData.data
   }
 
   if(type !== 'collection_view' && contentIds) {
@@ -98,8 +101,6 @@ async function getContentFromId({id, depth=0, collectionMap={}, recordMap=undefi
     })
     content.content = contents
   }
-
-
 
   // console.log('>>>>> ____Contents', content)
 

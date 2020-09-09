@@ -117,7 +117,7 @@ ${text.map(clip => clip[0]).join("&nbsp;&nbsp;>>")}
     } else if(["callout"].includes(type)) {
       /* Callout formatted with emoji from emojicdn.elk.sh or just image */
       const icon = block.format.page_icon
-      const imageLink = icon.startsWith("http") ? `https://www.notion.so/image/${encodeURIComponent(icon)}` : `https://emojicdn.elk.sh/${icon}`
+      const imageLink = icon.startsWith("http") ? `https://www.notion.so/image/${encodeURIComponent(icon)}?table=block&id=${block.id}` : `https://emojicdn.elk.sh/${icon}`
       const color = block.format.block_color.split("_")[0]
       const isBackground = block.format.block_color.split("_").length > 1
       const text = block.properties.title
@@ -146,8 +146,8 @@ ${text.map(clip => clip[0]).join("&nbsp;&nbsp;>>")}
       // console.log('TODO  ::::: EMBEDDED PAGE :::::', block.properties, block.properties.title)
     } else if(["collection_view"].includes(type)) {
       // console.log('getting embedded table')
-      const table = await getTableFromId({id: block.id, collectionMap, recordMap})
-      const tableMd = collectionToMarkdown(table)
+      const {data} = await getTableFromId({id: block.id, collectionMap, recordMap})
+      const tableMd = collectionToMarkdown(data)
       markdown.push(tableMd)
       markdown.push('\n') // add an empty row
     } else {
